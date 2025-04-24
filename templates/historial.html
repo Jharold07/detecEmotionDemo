@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de emociones</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> -->
+</head>
+
+<body>
+    <header>
+        <div class="logo">DetectEmotion</div>
+        <nav>
+            <span class="user-email">{{ session.get('email') }}</span>
+            <a href="/">Inicio</a>
+            <a href="/historial">Historial</a>
+            <a href="/login">Cerar Sesion</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="titulo">
+            <h2>Historial de emociones identificadas</h2>
+        </div>
+
+        <div class="container">
+            <!-- <form method="GET" action="/historial" class="filtro-form">
+                <input type="text" name="nombre" placeholder="Buscar por nombre" value="{{ request.args.get('nombre', '') }}">
+                
+                <select name="emocion">
+                    <option value="">Todas las emociones</option>
+                    <option value="feliz">Feliz</option>
+                    <option value="molesto">Molesto</option>
+                    <option value="triste">Triste</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="miedo">Miedo</option>
+                    <option value="asco">Asco</option>
+                    <option value="sorpresa">Sorpresa</option>
+                </select>
+                
+                <input type="date" name="fecha" value="{{ request.args.get('fecha', '') }}">
+                
+                <button type="submit">Filtrar</button>
+            </form> -->
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>NO.</th>
+                        <th>Nombre</th>
+                        <th>Edad A.</th>
+                        <th>Fecha y Hora</th>
+                        <th>Foto</th>
+                        <th>Emoción detectada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in historial %}
+                    <tr>
+                        <td>{{ item.no }}</td>
+                        <td>{{ item.nombre }}</td>
+                        <td>{{ item.edad }}</td>
+                        <td>{{ item.fecha }}</td>
+                        <td><a href="{{ url_for('static', filename=item.foto.replace('static/', '')) }}" target="_blank">ver</a></td>
+                        <td>{{ item.emocion }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <footer>
+        <span>DetectEmotion</span>
+        <span></span>
+    </footer>
+</body>
+
+</html>

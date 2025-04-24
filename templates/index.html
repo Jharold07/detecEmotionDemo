@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DetectEmotion</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <header>
+        <div class="logo">DetectEmotion</div>
+        <nav>
+            <span class="user-email">{{ session.get('email') }}</span>
+            <a href="/">Inicio</a>
+            <a href="/historial">Historial</a>
+            <a href="/login">Cerar Sesion</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="titulo">
+            <h2>Bienvenido/a a DetectEmotion</h2>
+        </div>
+
+        <div class="upload-box">
+            <form action="/predecir" method="POST" enctype="multipart/form-data">
+
+                <input type="text" name="nombre" placeholder="Ingresar nombre" required class="input-nombre">
+                <input type="number" name="edad" placeholder="Edad" required min="1" max="18" class="input-nombre">
+
+                <label for="imagen" class="upload-label">
+                    <input type="file" name="imagen" id="imagen" accept="image/*" required hidden>
+                    <div class="upload-icon">⬆️</div>
+                    <p class="upload-text">Upload Image</p>
+                </label>
+                <p class="description">Upload an image to detect the emotion of a person</p>
+                <button type="submit" class="submit-btn">Detect</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- MODAL DE RESULTADO -->
+    <div id="modalResultado" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModal()">&times;</span>
+            <h2>Resultado de la detección</h2>
+            <img id="previewImg" src="" alt="Imagen subida" style="max-width: 200px; margin: 10px auto;">
+            <p><strong>Emoción detectada:</strong> <span id="emocionTexto"></span></p>
+            <p><strong>Confianza:</strong> <span id="confianzaTexto"></span></p>
+            <form method="POST" action="/guardar" id="guardarForm">
+                <input type="hidden" name="nombre" id="nombreForm">
+                <input type="hidden" name="edad" id="edadForm">
+                <input type="hidden" name="emocion" id="emocionForm">
+                <input type="hidden" name="confianza" id="confianzaForm">
+                <input type="hidden" name="imagen_path" id="imagenPathForm">
+                <button type="submit" class="btn-guardar">Guardar</button>
+            </form>
+            <button onclick="location.href='/'" class="btn-subir">Subir otra imagen</button>
+        </div>
+    </div>
+
+
+    <footer>
+        <span>DetectEmotion</span>
+        <span></span>
+    </footer>
+</body>
+
+
+{% if emocion and confianza and imagen_guardada %}
+<script>
+window.onload = function () {
+    const emocion = "{{ emocion }}";
+    const confianza = "{{ confianza }}";
+    const imagen = "{{ url_for('static', filename='fotos/' + imagen_guardada) }}";
+
+    document.getElementById("modalResultado").style.display = "block";
+    document.getElementById("previewImg").src = imagen;
+    document.getElementById("emocionTexto").innerText = emocion;
+    document.getElementById("confianzaTexto").innerText = confianza;
+
+    document.getElementById("nombreForm").value = "{{ nombre }}";
+    document.getElementById("edadForm").value = "{{ edad }}";
+    document.getElementById("emocionForm").value = emocion;
+    document.getElementById("confianzaForm").value = confianza;
+    document.getElementById("imagenPathForm").value = imagen;
+}
+</script>
+{% endif %}
+
+</html>
