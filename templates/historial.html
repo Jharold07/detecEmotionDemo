@@ -26,7 +26,7 @@
         </div>
 
         <div class="container">
-            <!-- <form method="GET" action="/historial" class="filtro-form">
+            <form method="GET" action="/historial" class="filtro-form">
                 <input type="text" name="nombre" placeholder="Buscar por nombre" value="{{ request.args.get('nombre', '') }}">
                 
                 <select name="emocion">
@@ -42,9 +42,9 @@
                 
                 <input type="date" name="fecha" value="{{ request.args.get('fecha', '') }}">
                 
-                <button type="submit">Filtrar</button>
-            </form> -->
-            
+                <button type="submit" class="submit-btn">Filtrar</button>
+            </form>
+        
             <table>
                 <thead>
                     <tr>
@@ -52,6 +52,7 @@
                         <th>Nombre</th>
                         <th>Edad A.</th>
                         <th>Fecha y Hora</th>
+                        <th>Tiempo Seg.</th>
                         <th>Foto</th>
                         <th>Emoción detectada</th>
                     </tr>
@@ -63,12 +64,18 @@
                         <td>{{ item.nombre }}</td>
                         <td>{{ item.edad }}</td>
                         <td>{{ item.fecha }}</td>
+                        <td>{{ item.tiempo }}</td>
                         <td><a href="{{ url_for('static', filename=item.foto.replace('static/', '')) }}" target="_blank">ver</a></td>
                         <td>{{ item.emocion }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+            <div class="alfinal">
+                <a href="/exportar_pdf" class="btn-exportar" target="_blank">EXPORTAR PDF</a>
+            </div>
+            
         </div>
 
     </main>

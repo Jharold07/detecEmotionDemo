@@ -48,11 +48,13 @@
             <img id="previewImg" src="" alt="Imagen subida" style="max-width: 200px; margin: 10px auto;">
             <p><strong>Emoción detectada:</strong> <span id="emocionTexto"></span></p>
             <p><strong>Confianza:</strong> <span id="confianzaTexto"></span></p>
+            <p><strong>Tiempo de análisis:</strong> <span id="tiempoTexto"></span> segundos</p>
             <form method="POST" action="/guardar" id="guardarForm">
                 <input type="hidden" name="nombre" id="nombreForm">
                 <input type="hidden" name="edad" id="edadForm">
                 <input type="hidden" name="emocion" id="emocionForm">
                 <input type="hidden" name="confianza" id="confianzaForm">
+                <input type="hidden" name="tiempo" id="tiempoForm">
                 <input type="hidden" name="imagen_path" id="imagenPathForm">
                 <button type="submit" class="btn-guardar">Guardar</button>
             </form>
@@ -79,12 +81,17 @@ window.onload = function () {
     document.getElementById("previewImg").src = imagen;
     document.getElementById("emocionTexto").innerText = emocion;
     document.getElementById("confianzaTexto").innerText = confianza;
+    document.getElementById("tiempoForm").value = "{{ tiempo }}";
+    document.getElementById("tiempoTexto").innerText = "{{ tiempo }}";
+
 
     document.getElementById("nombreForm").value = "{{ nombre }}";
     document.getElementById("edadForm").value = "{{ edad }}";
     document.getElementById("emocionForm").value = emocion;
     document.getElementById("confianzaForm").value = confianza;
     document.getElementById("imagenPathForm").value = imagen;
+    document.getElementById("tiempoForm").value = "{{ tiempo }}";
+
 }
 </script>
 {% endif %}

@@ -173,6 +173,21 @@ footer {
 
 
 /* HISTORIAL____________________ */
+/* FILTRO */
+.filtro-form {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filtro-form input,
+.filtro-form select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+}
+
 /* tabla */
 table {
     width: 100%;
@@ -218,4 +233,24 @@ tbody tr:hover {
 }
 
 
+/* EXPORTAR */
+.alfinal{
+    display: flex;
+    justify-content: end;
+    align-items: end;
+    margin-top: 20px;
+
+}
+.btn-exportar {
+    background-color: #003459;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+}
+.btn-exportar:hover {
+    background-color: #3b82f6;
+}
 

@@ -8,7 +8,11 @@ import mediapipe as mp
 from tensorflow.keras.applications.mobilenet import preprocess_input
 from flask import Flask, request, render_template, redirect, url_for, session
 import sqlite3
-
+import time
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from io import BytesIO
+from flask import send_file
 
 app = Flask(__name__)
 
@@ -39,8 +43,13 @@ def predecir():
     img_array = np.array(img) / 255.0
     img_array = img_array.reshape(1, 224, 224, 3)
 
-    # Predicción
+    # medir tiempo de Predicción
+    start = time.time()
     pred = modelo.predict(img_array)
+    end = time.time()
+    tiempo_procesamiento = round(end - start, 2)
+
+    # Interpretar resultado
     emocion_idx = np.argmax(pred)
     emocion = emociones[emocion_idx]
     confianza = float(pred[0][emocion_idx]) * 100
@@ -57,24 +66,43 @@ def predecir():
                            confianza=f"{confianza:.2f}%",
                            imagen_guardada=filename,
                            nombre=nombre,
-                           edad=edad)
+                           edad=edad,
+                           tiempo=tiempo_procesamiento)
 
 
-@app.route("/historial")
+
 @app.route("/historial")
 def historial():
     if 'usuario_id' not in session:
         return redirect('/login')
 
+    nombre = request.args.get('nombre', '').strip()
+    emocion = request.args.get('emocion', '').strip().lower()
+    fecha = request.args.get('fecha', '').strip()
+
+    query = '''
+    SELECT nombre, edad, fecha, hora, emocion, imagen_path, tiempo_procesamiento
+    FROM registros
+    WHERE usuario_id = ?
+    '''
+    params = [session['usuario_id']]
+
+    if nombre:
+        query += " AND nombre LIKE ?"
+        params.append(f"%{nombre}%")
+    if emocion:
+        query += " AND lower(emocion) = ?"
+        params.append(emocion)
+    if fecha:
+        query += " AND fecha = ?"
+        params.append(fecha)
+
+    # Solo agregamos el ORDER BY una vez al final
+    query += " ORDER BY fecha DESC, hora DESC"
+
     conn = sqlite3.connect('data/emociones.db')
     cursor = conn.cursor()
-    cursor.execute('''
-        SELECT nombre, edad, fecha, hora, emocion, imagen_path
-        FROM registros
-        WHERE usuario_id = ?
-        ORDER BY fecha DESC, hora DESC
-    ''', (session['usuario_id'],))
-    
+    cursor.execute(query, params)
     datos = cursor.fetchall()
     conn.close()
 
@@ -86,10 +114,12 @@ def historial():
             "edad": fila[1],
             "fecha": f"{fila[2]} {fila[3]}",
             "emocion": fila[4].capitalize(),
-            "foto": fila[5]
+            "foto": fila[5],
+            "tiempo": f"{fila[6]:.2f}" if fila[6] else "-"
         })
 
     return render_template("historial.html", historial=historial_data)
+
 
 # INICIAR SESION
 @app.route('/login', methods=['GET', 'POST'])
@@ -166,6 +196,7 @@ def guardar():
     emocion = request.form.get('emocion')
     confianza = request.form.get('confianza')
     imagen_path = request.form.get('imagen_path')
+    tiempo = request.form.get('tiempo')
 
     now = datetime.now()
     fecha = now.strftime("%Y-%m-%d")
@@ -175,14 +206,55 @@ def guardar():
     conn = sqlite3.connect('data/emociones.db')
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO registros (nombre, edad, fecha, hora, emocion, imagen_path, usuario_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (nombre, int(edad), fecha, hora, emocion, imagen_path, usuario_id))
+        INSERT INTO registros (nombre, edad, fecha, hora, emocion, imagen_path, usuario_id, tiempo_procesamiento)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (nombre, int(edad), fecha, hora, emocion, imagen_path, usuario_id, float(tiempo)))
     conn.commit()
     conn.close()
 
     return redirect("/historial")
 
+#exportar pdf
+@app.route('/exportar_pdf')
+def exportar_pdf():
+    usuario_id = session.get('usuario_id')
+    if not usuario_id:
+        return redirect('/login')
+
+    conn = sqlite3.connect('data/emociones.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT nombre, edad, fecha, hora, emocion, tiempo_procesamiento
+        FROM registros
+        WHERE usuario_id = ?
+        ORDER BY fecha DESC, hora DESC
+    ''', (usuario_id,))
+    registros = cursor.fetchall()
+    conn.close()
+
+    # Crear PDF en memoria
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, height - 50, "Historial de Emociones Detectadas")
+
+    c.setFont("Helvetica", 10)
+    y = height - 80
+    for idx, r in enumerate(registros, 1):
+        texto = f"{idx}. {r[0]} | Edad: {r[1]} | Fecha: {r[2]} {r[3]} | Emoción: {r[4]} | Tiempo: {r[5]}s"
+        c.drawString(50, y, texto)
+        y -= 18
+        if y < 60:
+            c.showPage()
+            c.setFont("Helvetica", 10)
+            y = height - 50
+
+    c.save()
+    buffer.seek(0)
+
+    return send_file(buffer, as_attachment=True, download_name="historial_emociones.pdf", mimetype='application/pdf')
 
 if __name__ == '__main__':
     app.run(debug=True)
